@@ -46,7 +46,7 @@ def scale_data(X_train, X_validate, test_df):
     
     return X_train, X_validate,test_df
 
-def create_submission(model,predictions, test_df, test_df_ix):
+def create_submission(model,test_df, test_df_ix):
     '''
     Run prediction using model and test_df and create submission file
     
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     Scale data sets
     '''
     DEBUG_SMALL = True
-    FINAL_RUN = True
+    FINAL_RUN = False
     train_df, train_lbl_df, test_df = load_data()
     print('Data is loaded')
     drop_add_features(train_df,test_df,train_lbl_df)
@@ -98,14 +98,13 @@ if __name__ == '__main__':
             clf = train_svc(X_train, Y_train)
         accuracy, predictions = predict_validation_result(clf,X_validate,Y_validate)
         print("Accuracy on validation set", accuracy)
-        create_submission(clf, predictions, test_df,test_df_ix )
+        create_submission(clf, test_df,test_df_ix )
     else:
         '''
         In case submission, run model on full data set
         '''
         clf = train_svc(train_df, train_lbl_df)
-        accuracy, predictions = predict_validation_result(clf,X_validate,Y_validate)
-        create_submission(clf, predictions, test_df,test_df_ix )
+        create_submission(clf, test_df,test_df_ix )
     
     
     
