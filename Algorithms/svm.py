@@ -64,6 +64,9 @@ def create_submission(model,predictions, test_df, test_df_ix):
 
 if __name__ == '__main__':
     '''
+    Parameters to initialize:
+       - If FINAL_RUN is True then run model training on full data set
+       - Otherwise, set DEBUG_SMALL to True if willing to obtain quick results on 5K of data
     Load data
     Add/remove features (columns)
     Convert categorical columns to numbers or dummy columns
@@ -71,7 +74,7 @@ if __name__ == '__main__':
     Scale data sets
     '''
     DEBUG_SMALL = True
-    FINAL_RUN = False
+    FINAL_RUN = True
     train_df, train_lbl_df, test_df = load_data()
     print('Data is loaded')
     drop_add_features(train_df,test_df,train_lbl_df)
@@ -85,6 +88,7 @@ if __name__ == '__main__':
     '''
     X_train, X_validate, Y_train, Y_validate = train_test_split(train_df, train_lbl_df, test_size=0.20,random_state = 2015)
     X_train,X_validate,test_df = scale_data(X_train,X_validate,test_df)
+    
     if FINAL_RUN == False:
         if DEBUG_SMALL:
             print('Running training on small sample')
@@ -100,6 +104,7 @@ if __name__ == '__main__':
         In case submission, run model on full data set
         '''
         clf = train_svc(train_df, train_lbl_df)
+        accuracy, predictions = predict_validation_result(clf,X_validate,Y_validate)
         create_submission(clf, predictions, test_df,test_df_ix )
     
     
