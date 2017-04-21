@@ -33,18 +33,17 @@ def predict_validation_result(model,X_validate,Y_validate):
 
     return metrics.accuracy_score(Y_validate,labels),labels
 
-def scale_data(X_train, X_validate, test_df):
+def scale_data(train_df, test_df):
     '''
     It is important to scale data for the SVM algorithm
     Use sklearn scaler to scale validation/testing data based on training data
     '''
     
-    scaler = preprocessing.StandardScaler().fit(X_train)
-    X_train = scaler.transform(X_train)
-    X_validate = scaler.transform(X_validate)
+    scaler = preprocessing.StandardScaler().fit(train_df)
+    train_df = scaler.transform(train_df)
     test_df = scaler.transform(test_df)
     
-    return X_train, X_validate,test_df
+    return train_df,test_df
 
 def create_submission(model,test_df, test_df_ix):
     '''
@@ -79,6 +78,7 @@ if __name__ == '__main__':
     print('Data is loaded')
     drop_add_features(train_df,test_df,train_lbl_df)
     train_df,test_df,train_lbl_df = pre_process_data(train_df, test_df, train_lbl_df)
+    train_df,test_df = scale_data(train_df,test_df)
     random.seed(1234)
     test_df_ix=test_df['id']
     test_df.drop('id',axis=1,inplace=True)
@@ -86,8 +86,8 @@ if __name__ == '__main__':
     X_train - data frame to be used for training
     Y_train - label data corresponding to X_train
     '''
+    
     X_train, X_validate, Y_train, Y_validate = train_test_split(train_df, train_lbl_df, test_size=0.20,random_state = 2015)
-    X_train,X_validate,test_df = scale_data(X_train,X_validate,test_df)
     
     if FINAL_RUN == False:
         if DEBUG_SMALL:

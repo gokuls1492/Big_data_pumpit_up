@@ -15,8 +15,8 @@ rounds = 5000
  [ 717 3838   39]
  [ 235  427  164]]
 Accuracy on validation set 0.775084175084
-Submission accuracy 77.39%
-
+Submission accuracy 80% 77.39%
+                    100% 78.19%
 '''
 import numpy as np
 import pandas as pd
@@ -42,19 +42,6 @@ def predict_validation_result(model,X_validate,Y_validate):
     print(metrics.confusion_matrix(Y_validate,labels))
 
     return metrics.accuracy_score(Y_validate,labels),labels
-
-def scale_data(X_train, X_validate, test_df):
-    '''
-    It is important to scale data for the SVM algorithm
-    Use sklearn scaler to scale validation/testing data based on training data
-    '''
-    
-    scaler = preprocessing.StandardScaler().fit(X_train)
-    X_train = scaler.transform(X_train)
-    X_validate = scaler.transform(X_validate)
-    test_df = scaler.transform(test_df)
-    
-    return X_train, X_validate,test_df
 
 def create_submission(model,test_df, test_df_ix):
     '''
@@ -83,8 +70,8 @@ if __name__ == '__main__':
     Split to training/testing sets
     Scale data sets
     '''
-    DEBUG_SMALL = True
-    FINAL_RUN = False
+    DEBUG_SMALL = False
+    FINAL_RUN = True
     num_round=5000
     
     train_df, train_lbl_df, test_df = load_data()
@@ -99,7 +86,6 @@ if __name__ == '__main__':
     Y_train - label data corresponding to X_train
     '''
     X_train, X_validate, Y_train, Y_validate = train_test_split(train_df, train_lbl_df, test_size=0.20,random_state = 2015)
-    X_train,X_validate,test_df = scale_data(X_train,X_validate,test_df)
     
     #X_train=X_train.astype(float)
     '''XgBoost parameters
@@ -136,6 +122,7 @@ if __name__ == '__main__':
         bst = xgb.train(param, dtrain, num_round)
         dtest_sub=xgb.DMatrix(test_df,missing=np.NaN)
         create_submission(bst, dtest_sub,test_df_ix )
+        print('Completed Running training on full data')
     
     
     
