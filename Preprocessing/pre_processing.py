@@ -124,6 +124,14 @@ def map_int_to_label(label):
         return 'non functional'
     else: # 2
         return 'functional needs repair'
+
+def map_float_to_label(label):
+    if label <= 0.5:
+        return 'functional'
+    elif label > 0.5 and label < 1.5:
+        return 'non functional'
+    else: # 2
+        return 'functional needs repair'
     
 def pre_process_data(train_df,test_df,train_lbl_df):
     ''' 

@@ -5,7 +5,17 @@ Created on Apr 15, 2017
 '''
 
 '''
-Use SVM to classify data
+Use XgBoost to classify data
+
+Result:
+
+rounds = 5000
+
+[[5206 1220   34]
+ [ 717 3838   39]
+ [ 235  427  164]]
+Accuracy on validation set 0.775084175084
+Submission accuracy 77.39%
 
 '''
 import numpy as np
@@ -15,20 +25,20 @@ from Preprocessing.pre_processing import *
 from sklearn import svm 
 from sklearn import metrics
 import time
+import xgboost as xgb
 
-
-def train_svc(X_train, Y_train):
-    clf = svm.SVC(decision_function_shape='ovo')
-    clf.fit(X_train, Y_train['status_group']) 
-#     SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
-#         decision_function_shape='ovo', degree=3, gamma='auto', kernel='rbf',
-#         max_iter=-1, probability=False, random_state=None, shrinking=True,
-#         tol=0.001, verbose=False)
-    
-    return clf
 
 def predict_validation_result(model,X_validate,Y_validate):
     labels = model.predict(X_validate)
+    print(type(labels),labels)
+    for i,label in enumerate(labels):
+        if label <= 0.5:
+            labels[i]=0
+        elif label > 0.5 and label < 1.5:
+            labels[i] = 1
+        else: # 2
+            labels[i] = 2
+            
     print(metrics.confusion_matrix(Y_validate,labels))
 
     return metrics.accuracy_score(Y_validate,labels),labels
@@ -54,13 +64,13 @@ def create_submission(model,test_df, test_df_ix):
     predictions = model.predict(test_df)
     predictions_label=[]
     for pred in predictions:
-        predictions_label.append(map_int_to_label(pred))
+        predictions_label.append(map_float_to_label(pred))
     
     submission = pd.DataFrame(data=predictions_label,  # values
                               index=test_df_ix,  # 1st column as index
                               columns=["status_group"])  # 1st row as the column names
     timestr = time.strftime("%Y%m%d-%H%M%S")
-    submission.to_csv("../data/submission_svm_"+timestr+".csv")
+    submission.to_csv("../data/submission_xgb_"+timestr+".csv")
 
 if __name__ == '__main__':
     '''
@@ -75,6 +85,8 @@ if __name__ == '__main__':
     '''
     DEBUG_SMALL = True
     FINAL_RUN = False
+    num_round=5000
+    
     train_df, train_lbl_df, test_df = load_data()
     print('Data is loaded')
     drop_add_features(train_df,test_df,train_lbl_df)
@@ -89,22 +101,41 @@ if __name__ == '__main__':
     X_train, X_validate, Y_train, Y_validate = train_test_split(train_df, train_lbl_df, test_size=0.20,random_state = 2015)
     X_train,X_validate,test_df = scale_data(X_train,X_validate,test_df)
     
+    #X_train=X_train.astype(float)
+    '''XgBoost parameters
+    '''
+    param = {'max_depth':10, 'eta':10**-2, 'silent':1, 'min_child_weight':1, 'subsample' : 0.7 ,"early_stopping_rounds":10,
+                      "objective"   : "reg:linear",'eval_metric': 'rmse','colsample_bytree':0.8}
     if FINAL_RUN == False:
         if DEBUG_SMALL:
             print('Running training on small sample')
-            clf = train_svc(X_train[0:5000], Y_train[0:5000])
+            dtrain=xgb.DMatrix(X_train[0:5000],label=Y_train[0:5000],missing=np.NaN)
+            dtest=xgb.DMatrix(X_validate,missing=np.NaN)
+            watchlist  = [(dtrain,'train')]
+            bst = xgb.train(param, dtrain, num_round, watchlist)
+            #y_test_bst=bst.predict(dtest)
+
         else:
-            print('Running training on full data')
-            clf = train_svc(X_train, Y_train)
-        accuracy, predictions = predict_validation_result(clf,X_validate,Y_validate)
+            print('Running training on full sample data')
+            dtrain=xgb.DMatrix(X_train,label=Y_train,missing=np.NaN)
+            dtest=xgb.DMatrix(X_validate,missing=np.NaN)
+            watchlist  = [(dtrain,'train')]
+            bst = xgb.train(param, dtrain, num_round, watchlist)
+            
+        accuracy, predictions = predict_validation_result(bst,dtest,Y_validate)
         print("Accuracy on validation set", accuracy)
-        create_submission(clf, test_df,test_df_ix )
+        
+        dtest_sub=xgb.DMatrix(test_df,missing=np.NaN)
+        create_submission(bst, dtest_sub,test_df_ix )
     else:
         '''
         In case submission, run model on full data set
         '''
-        clf = train_svc(train_df, train_lbl_df)
-        create_submission(clf, test_df,test_df_ix )
+        print('Running training on full data')
+        dtrain=xgb.DMatrix(train_df,label=train_lbl_df,missing=np.NaN)
+        bst = xgb.train(param, dtrain, num_round)
+        dtest_sub=xgb.DMatrix(test_df,missing=np.NaN)
+        create_submission(bst, dtest_sub,test_df_ix )
     
     
     
