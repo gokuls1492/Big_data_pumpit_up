@@ -7,6 +7,8 @@ Created on Apr 15, 2017
 '''
 Use SVM to classify data
 
+Submission accuracy 80% 77.73%
+                    100% 78.03%
 '''
 import numpy as np
 import pandas as pd
@@ -73,15 +75,16 @@ if __name__ == '__main__':
     Scale data sets
     '''
     DEBUG_SMALL = True
-    FINAL_RUN = False
+    FINAL_RUN = True
     train_df, train_lbl_df, test_df = load_data()
     print('Data is loaded')
     drop_add_features(train_df,test_df,train_lbl_df)
     train_df,test_df,train_lbl_df = pre_process_data(train_df, test_df, train_lbl_df)
-    train_df,test_df = scale_data(train_df,test_df)
-    random.seed(1234)
     test_df_ix=test_df['id']
     test_df.drop('id',axis=1,inplace=True)
+    train_df,test_df = scale_data(train_df,test_df)
+    random.seed(1234)
+    
     '''
     X_train - data frame to be used for training
     Y_train - label data corresponding to X_train
