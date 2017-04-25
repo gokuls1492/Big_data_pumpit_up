@@ -3,7 +3,17 @@ Created on Apr 21, 2017
 
 @author: gokul
 '''  
-'''Accuracy = 81.46% on 80:20 ratio'''
+'''
+Use Grid search to Find best params
+Best params {'n_estimators': 120, 'random_state': 1, 'min_samples_split': 5, 'max_features': 50, 'bootstrap': True, 'max_depth': None, 'min_samples_leaf': 1}
+[[5791  548  121]
+ [ 933 3592   69]
+ [ 437  108  281]]
+Accuracy on validation set 0.813468013468  (80/20 Split)
+Submission accuracy 81.74% (80/20 Split)
+Submission accuracy 82.14% Full training file
+'''
+
 '''Use Random Forest'''
 import numpy as np
 import pandas as pd
@@ -12,11 +22,11 @@ from Preprocessing.pre_processing import *
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 import time
-from sklearn.grid_search import GridSearchCV
+from sklearn.model_selection import GridSearchCV
 
 def train_rf(X_train, Y_train):
     rf = RandomForestClassifier();
-    rf.set_params(**getBestParams(X_train, Y_train['status_group']))
+    rf.set_params(**getBestParams(X_train, Y_train['status_group'],rerun=False))
     rf.fit(X_train, Y_train['status_group'])     
     return rf
 
@@ -67,23 +77,25 @@ def getBestParams(X_train, y_train, rerun = False):
 
     if rerun:
         rf_grid = {'max_depth': [None],
-                   'max_features': [20],
-                   'min_samples_split': [1, 3],
-                   'min_samples_leaf': [1, 3],
+                   'max_features': [50],
+                   'min_samples_split': [2, 5],
+                   'min_samples_leaf': [1, 5],
                    'bootstrap': [True],
-                   'n_estimators': [50],
+                   'n_estimators': [120],
                    'random_state': [1]}
 
         grid_cv = GridSearchCV(RandomForestClassifier(), rf_grid, n_jobs=-1, verbose=True,
-                               scoring='mean_squared_error').fit(X_train, y_train)
+                               scoring='accuracy').fit(X_train, y_train)
+                               #scoring='mean_squared_error').fit(X_train, y_train)
         best_params = grid_cv.best_params_
+        print('Best params', best_params)
     else:
         best_params = {'bootstrap': True,
                      'max_depth': None,
-                     'max_features': 30,
+                     'max_features': 50,
                      'min_samples_leaf': 1,
-                     'min_samples_split': 3,
-                     'n_estimators': 100,
+                     'min_samples_split': 5,
+                     'n_estimators': 120,
                      'random_state': 1}
 
     return best_params
@@ -102,7 +114,7 @@ if __name__ == '__main__':
     Scale data sets
     '''
     DEBUG_SMALL = False
-    FINAL_RUN = False
+    FINAL_RUN = True
     train_df, train_lbl_df, test_df = load_data()
     print('Data is loaded')
     drop_add_features(train_df,test_df,train_lbl_df)
