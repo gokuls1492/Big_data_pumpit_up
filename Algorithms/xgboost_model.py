@@ -6,17 +6,19 @@ Created on Apr 15, 2017
 
 '''
 Use XgBoost to classify data
+Use hyperopt to tune parameters
 
 Result:
 
-rounds = 5000
 
-[[5206 1220   34]
- [ 717 3838   39]
- [ 235  427  164]]
-Accuracy on validation set 0.775084175084
-Submission accuracy 80% 77.39%
-                    100% 78.19%
+Submission accuracy on 100% 82.48%
+Rank 15
+Best parameters:                  
+{'colsample_bytree': 0.55, 'max_depth': 19.0, 'min_child_weight': 1.0, 'subsample': 0.9500000000000001, 'n_estimators': 78.0, 'gamma': 0.5, 'eta': 0.05}  
+[[5874  480  106]
+ [ 958 3580   56]
+ [ 444  115  267]]
+Accuracy 0.818 on 80/20 Split                    
 '''
 import numpy as np
 import pandas as pd
@@ -26,9 +28,49 @@ from sklearn import svm
 from sklearn import metrics
 import time
 import xgboost as xgb
+from hyperopt import hp
+from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
 
+def optimize(trials):
+    space = {
+             'n_estimators' : hp.quniform('n_estimators', 10, 150, 1),
+             'eta' : hp.quniform('eta', 0.025, 0.5, 0.025),
+             'max_depth' : hp.quniform('max_depth', 1, 20, 1),
+             'min_child_weight' : hp.quniform('min_child_weight', 1, 6, 1),
+             'subsample' : hp.quniform('subsample', 0.5, 1, 0.05),
+             'gamma' : hp.quniform('gamma', 0.5, 1, 0.05),
+             'colsample_bytree' : hp.quniform('colsample_bytree', 0.5, 1, 0.05),
+             'num_class' : 3,
+             'eval_metric': 'merror',
+             'objective': 'multi:softmax',
+             'nthread' : 4,
+             'silent' : 1
+             }
 
+    best = fmin(score, space, algo=tpe.suggest, trials=trials, max_evals=250)
+
+    print ('Best parameters',best)
+
+def score(params):
+    print ("Training with params : ")
+    print(params)
+    num_round = int(params['n_estimators'])
+    del params['n_estimators']
+    params['max_depth'] = int(params['max_depth'])
+    dtrain = xgb.DMatrix(X_train, label=Y_train)
+    dvalid = xgb.DMatrix(X_validate, label=Y_validate)
+
+    model = xgb.train(params, dtrain, num_round)
+    accuracy, predictions = predict_validation_result(model,dvalid,Y_validate)
+    score = 1 - accuracy
+    print ("Accuracy",accuracy)
+    return {'loss': score, 'status': STATUS_OK}
+    
 def predict_validation_result(model,X_validate,Y_validate):
+    '''
+    Translation to labels needed only when using reg:linear objective.
+    If multi:softmax is used labels are classified correctly. Still the translation will leave labels unchanged
+    '''
     labels = model.predict(X_validate)
     print(type(labels),labels)
     for i,label in enumerate(labels):
@@ -62,6 +104,7 @@ def create_submission(model,test_df, test_df_ix):
 if __name__ == '__main__':
     '''
     Parameters to initialize:
+       - If GET_PARAMETERS is set to True, tuning of parameters via hyperopt will be triggered
        - If FINAL_RUN is True then run model training on full data set
        - Otherwise, set DEBUG_SMALL to True if willing to obtain quick results on 5K of data
     Load data
@@ -71,8 +114,9 @@ if __name__ == '__main__':
     Scale data sets
     '''
     DEBUG_SMALL = False
-    FINAL_RUN = True
-    num_round=5000
+    FINAL_RUN = False
+    GET_PARAMETERS=False
+    num_round=78
     
     train_df, train_lbl_df, test_df = load_data()
     print('Data is loaded')
@@ -85,13 +129,26 @@ if __name__ == '__main__':
     X_train - data frame to be used for training
     Y_train - label data corresponding to X_train
     '''
+    if GET_PARAMETERS:
+        global X_train, X_validate, Y_train, Y_validate
+    
     X_train, X_validate, Y_train, Y_validate = train_test_split(train_df, train_lbl_df, test_size=0.20,random_state = 2015)
     
     #X_train=X_train.astype(float)
     '''XgBoost parameters
     '''
-    param = {'max_depth':10, 'eta':10**-2, 'silent':1, 'min_child_weight':1, 'subsample' : 0.7 ,"early_stopping_rounds":10,
-                      "objective"   : "reg:linear",'eval_metric': 'rmse','colsample_bytree':0.8}
+    param = {'max_depth':19, 'eta':0.05, 'silent':1, 'min_child_weight':1, 'subsample' : 0.95 ,
+                      'num_class' : 3, 'nthread' : 4,"objective"   : "multi:softmax",
+                      'eval_metric': 'merror','colsample_bytree':0.55, 'gamma': 0.5}
+    
+    if GET_PARAMETERS:
+        '''
+        If running to evaluate best parameters and exit
+        '''
+        trials = Trials()
+        optimize(trials)
+        exit
+    
     if FINAL_RUN == False:
         if DEBUG_SMALL:
             print('Running training on small sample')
