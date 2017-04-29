@@ -14,25 +14,11 @@ warnings.filterwarnings('ignore')
 import numpy as np
 import pandas as pd
 import random
-import seaborn as sns
+
 
 # Modelling Algorithms
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
-
-
-
-# Visualisation
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.pylab as pylab
-
-
-# Configure visualisations
-#matplotlib inline
-#mpl.style.use( 'ggplot' )
-pylab.rcParams[ 'figure.figsize' ] = 8 , 6
-
 
 def load_data():
     train_df = pd.read_csv("../data/Training_data_values.csv")
