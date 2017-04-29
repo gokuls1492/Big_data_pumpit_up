@@ -39,7 +39,6 @@ GET_PARAMETERS=False
 
 import numpy as np
 import pandas as pd
-import random
 from Preprocessing.pre_processing import *
 from sklearn import svm 
 from sklearn import metrics
