@@ -4,6 +4,15 @@ Created on Apr 21, 2017
 @author: gokul
 '''  
 '''
+Parameters to initialize:
+       - If FINAL_RUN is True then run model training on full data set
+       - Otherwise, set DEBUG_SMALL to True if willing to obtain quick results on 5K of data
+    Load data
+    Add/remove features (columns)
+    Convert categorical columns to numbers or dummy columns
+    Split to training/testing sets
+    Scale data sets - optional for Random Forest - kept for consistency with SVM
+    
 Use Grid search to Find best params
 Best params {'n_estimators': 120, 'random_state': 1, 'min_samples_split': 5, 'max_features': 50, 'bootstrap': True, 'max_depth': None, 'min_samples_leaf': 1}
 [[5791  548  121]
@@ -15,6 +24,10 @@ Submission accuracy 82.14% Full training file
 '''
 
 '''Use Random Forest'''
+
+DEBUG_SMALL = False
+FINAL_RUN = False
+
 import numpy as np
 import pandas as pd
 import random
@@ -25,6 +38,11 @@ import time
 from sklearn.model_selection import GridSearchCV
 
 def train_rf(X_train, Y_train):
+    '''
+    Set rerun=False to use existing parameters 
+    Set rerun=True to recalculate best parameters, It will take much longer to run
+    
+    '''
     rf = RandomForestClassifier();
     rf.set_params(**getBestParams(X_train, Y_train['status_group'],rerun=False))
     rf.fit(X_train, Y_train['status_group'])     
@@ -113,8 +131,6 @@ if __name__ == '__main__':
     Split to training/testing sets
     Scale data sets
     '''
-    DEBUG_SMALL = False
-    FINAL_RUN = True
     train_df, train_lbl_df, test_df = load_data()
     print('Data is loaded')
     drop_add_features(train_df,test_df,train_lbl_df)

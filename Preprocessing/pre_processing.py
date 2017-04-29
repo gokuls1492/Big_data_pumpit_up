@@ -2,8 +2,11 @@
 Created on Apr 8, 2017
 
 @author: uri
+
+Module used to provide methods for data load and pre-processing
+It can be run by itself to display data features and test load and preprocessing
 '''
-#import Preprocessing.print_helper_functions
+
 # Ignore warnings
 import warnings
 warnings.filterwarnings('ignore')
@@ -16,15 +19,8 @@ import seaborn as sns
 # Modelling Algorithms
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC, LinearSVC
-from sklearn.ensemble import RandomForestClassifier , GradientBoostingClassifier
 
-# Modelling Helpers
-from sklearn.feature_selection import RFECV
+
 
 # Visualisation
 import matplotlib as mpl
@@ -168,18 +164,9 @@ def pre_process_data(train_df,test_df,train_lbl_df):
     return train_df,test_df, train_lbl_df    
 
 
-def calculate_rank(prob_array):
-    records, columns = prob_array.shape
-    rank_list = []
-    for c in range(records):
-        rank = int(((prob_array[c,0]*1 + prob_array[c,1]*2 +prob_array[c,2]*3 + prob_array[c,3]*4 + prob_array[c,4]*5 + prob_array[c,5]*6 + prob_array[c,6]*7 + prob_array[c,7]*8)/8)*10)
-        rank_list.append(rank) 
-    return np.asarray(rank_list)
-
  
 
 if __name__ == '__main__':
-    MODELS = {'1':True,'2':False,'2a': False, '3':False, '4':False, '5':False, '6':False, '2_submit':False, 'ALL':False}
     train_df, train_lbl_df, test_df = load_data()
     print('Data is loaded')
     drop_add_features(train_df,test_df,train_lbl_df)
@@ -187,10 +174,14 @@ if __name__ == '__main__':
     print(summary_df)
     summary_df.to_csv("Summary_data1.csv",set='\t')
     summary_df = describe_more(train_lbl_df)
+    print('Summary of data values for training set')
     print(summary_df)
+    
+    print('Test pre-processing and splitting data')
     train_df,test_df, train_lbl_df = pre_process_data(train_df, test_df,train_lbl_df)
     print("Num columns...",len(train_df.columns))
-    print(train_lbl_df)
+    print('Labels first 10 records')
+    print(train_lbl_df.head(n=10))
     random.seed(1234)
     
     X_train, X_validate, Y_train, Y_validate = train_test_split(train_df, train_lbl_df, test_size=0.15,random_state = 2015)

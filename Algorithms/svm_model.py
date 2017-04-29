@@ -6,13 +6,21 @@ Created on Apr 15, 2017
 
 '''
 Use SVM to classify data
-
+Parameters to initialize:
+       - If FINAL_RUN is True then run model training on full data set
+       - Otherwise, set DEBUG_SMALL to True if willing to obtain quick results on 5K of data
+    Load data
+    Add/remove features (columns)
+    Convert categorical columns to numbers or dummy columns
+    Split to training/testing sets
+    Scale data sets <<<!!! Important for SVM !!!>>>>>>
+    
 Submission accuracy 80% 77.73%
                     100% 78.03%
 '''
-import numpy as np
-import pandas as pd
-import random
+DEBUG_SMALL = True
+FINAL_RUN = False
+
 from Preprocessing.pre_processing import *
 from sklearn import svm 
 from sklearn import metrics
@@ -74,8 +82,6 @@ if __name__ == '__main__':
     Split to training/testing sets
     Scale data sets
     '''
-    DEBUG_SMALL = True
-    FINAL_RUN = True
     train_df, train_lbl_df, test_df = load_data()
     print('Data is loaded')
     drop_add_features(train_df,test_df,train_lbl_df)
