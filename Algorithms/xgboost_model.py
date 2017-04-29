@@ -37,6 +37,12 @@ DEBUG_SMALL = False
 FINAL_RUN = False
 GET_PARAMETERS=False
 
+# Added in order to run from command line
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#*****************#
+
 import numpy as np
 import pandas as pd
 from Preprocessing.pre_processing import *
@@ -96,7 +102,8 @@ def predict_validation_result(model,X_validate,Y_validate):
             labels[i] = 1
         else: # 2
             labels[i] = 2
-            
+    
+    print("Confusion matrix")
     print(metrics.confusion_matrix(Y_validate,labels))
 
     return metrics.accuracy_score(Y_validate,labels),labels

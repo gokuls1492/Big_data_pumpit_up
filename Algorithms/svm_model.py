@@ -21,6 +21,12 @@ Submission accuracy 80% 77.73%
 DEBUG_SMALL = True
 FINAL_RUN = False
 
+# Added in order to run from command line
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#*****************#
+
 from Preprocessing.pre_processing import *
 from sklearn import svm 
 from sklearn import metrics
@@ -39,6 +45,7 @@ def train_svc(X_train, Y_train):
 
 def predict_validation_result(model,X_validate,Y_validate):
     labels = model.predict(X_validate)
+    print("Confusion matrix")
     print(metrics.confusion_matrix(Y_validate,labels))
 
     return metrics.accuracy_score(Y_validate,labels),labels
