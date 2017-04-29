@@ -7,12 +7,25 @@ Created on Apr 15, 2017
 '''
 Use XgBoost to classify data
 Use hyperopt to tune parameters
+Parameters to initialize:
+       - If GET_PARAMETERS is set to True, tuning of parameters via hyperopt will be triggered. >>>>>>>>>>It will take several hours<<<<<
+       - If FINAL_RUN is True then run model training on full data set
+       - If FINAL_RUN is False, set DEBUG_SMALL to True if willing to obtain quick results on 5K of data
+       - In below setting example example, training will run on 80% data set and validation on 20%. Submission file will be created based on that model:
+           DEBUG_SMALL = False
+           FINAL_RUN = False
+           GET_PARAMETERS=False
+Flow:
+    Load data
+    Add/remove features (columns)
+    Convert categorical columns to numbers or dummy columns
+    Split to training/testing sets
+    >>>Important<<<< : If GET_PARAMETERS is set to True, tuning of parameters via hyperopt will be triggered. >>>>>>>>>>It will take several hours<<<<<
+    Scale data sets
 
-Result:
-
-
+Best Result:
 Submission accuracy on 100% 82.48%
-Rank 15
+Rank on Leader-board as of 4/28/2017 - 15th
 Best parameters:                  
 {'colsample_bytree': 0.55, 'max_depth': 19.0, 'min_child_weight': 1.0, 'subsample': 0.9500000000000001, 'n_estimators': 78.0, 'gamma': 0.5, 'eta': 0.05}  
 [[5874  480  106]
@@ -20,6 +33,10 @@ Best parameters:
  [ 444  115  267]]
 Accuracy 0.818 on 80/20 Split                    
 '''
+DEBUG_SMALL = False
+FINAL_RUN = False
+GET_PARAMETERS=False
+
 import numpy as np
 import pandas as pd
 import random
@@ -72,7 +89,7 @@ def predict_validation_result(model,X_validate,Y_validate):
     If multi:softmax is used labels are classified correctly. Still the translation will leave labels unchanged
     '''
     labels = model.predict(X_validate)
-    print(type(labels),labels)
+    print('Prediction type and sample',type(labels),labels)
     for i,label in enumerate(labels):
         if label <= 0.5:
             labels[i]=0
@@ -113,9 +130,9 @@ if __name__ == '__main__':
     Split to training/testing sets
     Scale data sets
     '''
-    DEBUG_SMALL = False
-    FINAL_RUN = False
-    GET_PARAMETERS=False
+    
+    ''' Set parameter for the XgBoost training. It is past as an input outside of the params dictionary
+    '''
     num_round=78
     
     train_df, train_lbl_df, test_df = load_data()
